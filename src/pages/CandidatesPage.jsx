@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import CandidateForm from "../components/candidates/CandidateForm";
 import CandidateList from "../components/candidates/CandidateList";
 import {
   getCandidates,
@@ -84,8 +83,6 @@ export default function CandidatesPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Candidates</h1>
       
-      <CandidateForm addCandidate={addCandidate} />
-
       <CandidateList
         candidates={candidates}
         updateStage={updateStage}
