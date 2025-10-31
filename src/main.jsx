@@ -7,7 +7,6 @@ import App from "./App.jsx";
 import { seedIfEmpty } from "./mock_server/api/db/seedData"; // 👈 import seeder
 
 async function enableMocking() {
-  if (import.meta.env.MODE !== "development") return;
 
   try {
     const { worker } = await import("./mock_server/api/msw/browser.js");
