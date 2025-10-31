@@ -9,6 +9,13 @@ export async function getCandidates(params = {}) {
   return httpRequest(`${BASE}?${query}`)
 }
 
+export async function getCandidateById(id) {
+  if (!id) {
+    throw new Error('Candidate ID is required')
+  }
+  return httpRequest(`${BASE}/${id}`)
+}
+
 // POST /candidates
 export async function createCandidate(payload) {
   return httpRequest(BASE, {

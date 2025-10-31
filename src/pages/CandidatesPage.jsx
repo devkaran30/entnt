@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import CandidateForm from "../components/candidates/CandidateForm";
 import CandidateList from "../components/candidates/CandidateList";
 import {
@@ -16,6 +17,7 @@ export default function CandidatesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCandidates(page, pageSize);
@@ -27,7 +29,7 @@ export default function CandidatesPage() {
       const data = await getCandidates({ page: pageNum, pageSize: size });
       const newItems = data?.items || [];
       const total = data?.total || 0;
-
+      console.log(newItems)
       setCandidates(newItems);
       setHasPrev(pageNum > 1);
       setHasNext(pageNum * size < total);
@@ -54,19 +56,10 @@ export default function CandidatesPage() {
     }
   };
 
-  const nextStage = async (id) => {
-    const stages = ["Applied", "Interview", "Hired"];
-    const candidate = candidates.find((c) => c.id === id);
-    if (!candidate) return;
-
-    const currentIndex = stages.indexOf(candidate.stage);
-    if (currentIndex === -1 || currentIndex === stages.length - 1) return;
-
-    const next = stages[currentIndex + 1];
+  const updateStage = async (id, newStage) => {
     setUpdatingId(id);
-
     try {
-      const updated = await updateCandidate(id, { stage: next });
+      const updated = await updateCandidate(id, { stage: newStage });
       setCandidates((prev) =>
         prev.map((c) => (c.id === id ? { ...c, stage: updated.stage } : c))
       );
@@ -78,23 +71,30 @@ export default function CandidatesPage() {
     }
   };
 
+  const handleCardClick = (candidateId) => {
+    navigate(`/candidates/${candidateId}`);
+  };
+
   if (loading)
     return <p className="text-gray-500 text-center">Loading candidates...</p>;
   if (error)
     return <p className="text-red-600 text-center">{error}</p>;
 
   return (
-    <div>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Candidates</h1>
+      
       <CandidateForm addCandidate={addCandidate} />
 
       <CandidateList
         candidates={candidates}
-        nextStage={nextStage}
+        updateStage={updateStage}
         updatingId={updatingId}
+        onCardClick={handleCardClick}
       />
 
       {/* Pagination Controls */}
-      <div className="flex flex-col items-center mt-6 gap-3">
+      <div className="flex flex-col items-center mt-8 gap-4">
         {/* Page size selector */}
         <div className="flex items-center gap-2">
           <label htmlFor="pageSize" className="text-gray-700 font-medium">
@@ -105,9 +105,9 @@ export default function CandidatesPage() {
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
-              setPage(1); // Reset to first page when page size changes
+              setPage(1);
             }}
-            className="border border-gray-300 rounded px-2 py-1 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value={10}>10</option>
             <option value={20}>20</option>
@@ -117,11 +117,11 @@ export default function CandidatesPage() {
         </div>
 
         {/* Prev/Next Buttons */}
-        <div className="flex justify-center items-center gap-3 mt-2">
+        <div className="flex justify-center items-center gap-4">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={!hasPrev}
-            className={`px-4 py-2 rounded text-white ${
+            className={`px-6 py-2 rounded-lg text-white font-medium transition-colors ${
               hasPrev
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-gray-400 cursor-not-allowed"
@@ -130,12 +130,12 @@ export default function CandidatesPage() {
             Previous
           </button>
 
-          <span className="px-3 py-2 text-gray-700">Page {page}</span>
+          <span className="px-4 py-2 text-gray-700 font-medium">Page {page}</span>
 
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={!hasNext}
-            className={`px-4 py-2 rounded text-white ${
+            className={`px-6 py-2 rounded-lg text-white font-medium transition-colors ${
               hasNext
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-gray-400 cursor-not-allowed"

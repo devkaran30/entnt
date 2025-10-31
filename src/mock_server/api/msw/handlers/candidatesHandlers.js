@@ -66,7 +66,25 @@ export const candidatesHandlers = [
       pageSize,
     });
   }),
-  
+
+  // ======================================================
+  // GET /candidates/:id
+  // ======================================================
+  http.get(`${base}/candidates/:id`, async ({ params }) => {
+    await sleep(randomLatency())
+
+    const { id } = params
+    const candidate = await candidatesTable.get(id)
+
+    if (!candidate) {
+      return HttpResponse.json(
+        { message: 'Candidate not found' },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json(candidate, { status: 200 })
+  }),
 
   // ======================================================
   // POST /candidates

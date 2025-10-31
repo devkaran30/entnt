@@ -7,6 +7,7 @@ import CandidatesPage from "./pages/CandidatesPage";
 import AssessmentsPage from "./pages/AssessmentsPage";
 import JobDetailPage from "./pages/JobDetail"
 import AssessmentDetailPage from "./pages/AssessmentDetailPage";
+import CandidateDetailsPage from "./pages/CandidateDetailsPage";
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:jobId" element={<JobDetailPage />} />
           <Route path="/candidates" element={<CandidatesPage />} />
+          <Route path="/candidates/:id" element={<CandidateDetailsPage />} />
           <Route path="/assessments" element={<AssessmentsPage />} />
           <Route path="/assessments/:jobId" element={<AssessmentDetailPage />} />
         </Routes>

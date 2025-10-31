@@ -1,19 +1,22 @@
-// src/pages/JobsPage.jsx
+// In your JobsPage component
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import JobForm from "../components/jobs/JobForm";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import JobForm from "../components/jobs/JobForm"; // Updated import
 import JobList from "../components/jobs/JobList";
 import {
   getJobs,
   createJob,
   updateJob,
   reorderJob,
-} from "../utils/api"; // ✅ MSW API calls
+} from "../utils/api";
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showJobForm, setShowJobForm] = useState(false); // New state for modal
   const navigate = useNavigate();
 
   // ✅ Load jobs from API
@@ -33,14 +36,13 @@ export default function JobsPage() {
     fetchJobs();
   }, []);
 
-  // ✅ Create a new job
-  const addJob = async (title) => {
+  // ✅ Create a new job - UPDATED
+  const addJob = async (jobData) => {
     try {
       const newJob = {
-        title,
-        slug: title.toString().toLowerCase().replace(/\s+/g, "-"),
+        ...jobData,
+        slug: jobData.title.toLowerCase().replace(/\s+/g, "-"),
         status: "active",
-        tags: [],
       };
       const created = await createJob(newJob);
       setJobs((prev) => [...prev, created]);
@@ -50,7 +52,7 @@ export default function JobsPage() {
     }
   };
 
-  // ✅ Toggle archive / active
+  // Rest of your existing functions remain the same...
   const toggleArchive = async (id, currentStatus) => {
     try {
       const updated = await updateJob(id, {
@@ -65,58 +67,70 @@ export default function JobsPage() {
     }
   };
 
-  // ✅ Move job (reorder)
-  const moveJob = async (index, dir) => {
-    const newIndex = index + dir;
-    if (newIndex < 0 || newIndex >= jobs.length) return;
+  const moveCard = async (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return;
 
     const reordered = [...jobs];
-    const [moved] = reordered.splice(index, 1);
-    reordered.splice(newIndex, 0, moved);
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
     setJobs(reordered);
 
     try {
-      await reorderJob(moved.id, { fromOrder: index + 1, toOrder: newIndex + 1 });
+      await reorderJob(moved.id, { 
+        fromOrder: fromIndex + 1, 
+        toOrder: toIndex + 1 
+      });
     } catch (err) {
       console.error("Reorder failed:", err);
       setError("Reordering failed (simulated 500 possible).");
     }
   };
 
-  // ✅ Edit job title
-  const editJob = async (id, newTitle) => {
-    try {
-      const updated = await updateJob(id, {
-        title: newTitle,
-        slug: newTitle.toLowerCase().replace(/\s+/g, "-"),
-      });
-      setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)));
-    } catch (err) {
-      console.error("Edit failed:", err);
-      setError("Failed to update job.");
-    }
-  };
-
-  // ✅ Navigate to job details (or assessments)
   const handleJobClick = (id) => {
     navigate(`/jobs/${id}/`);
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-3 text-gray-700">Manage Jobs</h2>
+    <DndProvider backend={HTML5Backend}>
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Manage Jobs</h2>
+          <button
+            onClick={() => setShowJobForm(true)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
+          >
+            <span>+</span>
+            Add Job
+          </button>
+        </div>
 
-      {error && <p className="text-red-500">{error}</p>}
-      {loading && <p>Loading jobs...</p>}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
+        {loading && (
+          <div className="text-center text-gray-500 py-8">
+            <p>Loading jobs...</p>
+          </div>
+        )}
 
-      <JobForm onAdd={addJob} />
-      <JobList
-        jobs={jobs}
-        onArchive={toggleArchive}
-        onMove={moveJob}
-        onEdit={editJob}
-        onClick={handleJobClick}
-      />
-    </div>
+        <JobList
+          jobs={jobs}
+          onArchive={toggleArchive}
+          onMove={moveCard}
+          onClick={handleJobClick}
+          moveCard={moveCard}
+        />
+
+        {/* Job Form Modal */}
+        <JobForm
+          onAdd={addJob}
+          isOpen={showJobForm}
+          onClose={() => setShowJobForm(false)}
+        />
+      </div>
+    </DndProvider>
   );
 }
